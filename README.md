@@ -1,47 +1,127 @@
 # iBank — flujo de autenticación con Supabase
 
-Aplicación Expo/React Native que implementa el TP3 de Arquitectura y Programación Móvil: inicio de sesión, registro, confirmación pendiente, recuperación y definición de una contraseña nueva, conectados con Supabase Auth.
+Trabajo Práctico 3 de **Arquitectura y Programación Móvil**.
+
+Aplicación desarrollada con **React Native + Expo** que implementa el flujo completo de autenticación solicitado para iBank, utilizando **Supabase Auth** como backend.
+
+## Funcionalidades implementadas
+
+- Inicio de sesión con email y contraseña.
+- Registro de usuario.
+- Confirmación pendiente de email.
+- Reenvío del email de confirmación.
+- Recuperación de contraseña por email.
+- Definición de una nueva contraseña desde un enlace de recuperación.
+- Validaciones de formularios con React Hook Form + Zod.
+- Checklist visual de requisitos de contraseña.
+- Aceptación obligatoria de términos en el registro.
+- Estados de carga y bloqueo de formularios durante requests.
+- Manejo de rate limit con cooldown visual de 60 segundos.
+- Mensajes de error centralizados y en español.
+- Comportamiento anti-enumeración en registro y recuperación.
+- Persistencia de sesión mediante AsyncStorage.
+- Auto-refresh de sesión según el estado de la aplicación.
+- Deep links para confirmación y recuperación.
+- Rutas protegidas para separar autenticación y contenido privado.
+- Logout mediante Supabase Auth.
+- Home mínima para demostrar sesión válida, metadata del usuario y rutas protegidas.
+
+## Stack técnico
+
+- React Native 0.86
+- Expo SDK 57
+- Expo Router
+- TypeScript
+- Supabase JS v2
+- React Hook Form
+- Zod
+- AsyncStorage
+- Expo Linking
+- React Native URL Polyfill
 
 ## Requisitos
 
-- Node.js 20 o superior
-- npm
-- Expo Go o un emulador Android/iOS
-- Un proyecto de Supabase
+- Node.js 20 o superior.
+- npm.
+- Expo Go, development build o emulador Android/iOS.
+- Un proyecto de Supabase.
 
 ## Instalación
 
+Clonar el repositorio:
+
+```bash
+git clone https://github.com/JoaquinGonzalezCalderon/tp3mobile.git
+cd tp3mobile
+```
+
+Instalar dependencias:
+
 ```bash
 npm install
+```
+
+Crear el archivo de variables de entorno a partir del ejemplo.
+
+### Windows
+
+```bash
 copy .env.example .env
 ```
 
-Completá `.env` con la URL y la clave `anon`/`publishable` de tu proyecto. Las variables `EXPO_PUBLIC_` quedan incluidas en la aplicación cliente: nunca uses aquí la clave `service_role`.
+### macOS / Linux
 
-Para iniciar el proyecto:
+```bash
+cp .env.example .env
+```
+
+Completar `.env` con los datos públicos del proyecto Supabase:
+
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://TU-PROYECTO.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=TU_ANON_O_PUBLISHABLE_KEY
+```
+
+> Las variables `EXPO_PUBLIC_` forman parte de la aplicación cliente. La clave `service_role` nunca debe incluirse en la app ni subirse al repositorio.
+
+El archivo `.env` está ignorado por Git.
+
+## Ejecutar el proyecto
 
 ```bash
 npm start
 ```
 
-Después podés presionar `a` para Android, `i` para iOS en macOS o `w` para web. También están disponibles `npm run android`, `npm run ios` y `npm run web`.
+Desde Expo:
+
+- `a` abre Android.
+- `i` abre iOS en macOS.
+- `w` abre la versión web.
+
+También pueden utilizarse:
+
+```bash
+npm run android
+npm run ios
+npm run web
+```
 
 ## Configuración de Supabase
 
-El repositorio incluye `supabase/config.toml` con las reglas de Auth del TP. Para aplicarlas nuevamente sobre un proyecto propio:
+El repositorio incluye `supabase/config.toml` con una configuración de Auth alineada al TP.
 
-```bash
-npx supabase login
-npx supabase config push --project-ref TU_PROJECT_REF
-```
+Configuración declarada:
 
-En **Authentication** del dashboard:
+- Confirmación de email activada.
+- Contraseña mínima de 8 caracteres.
+- Requisito de mayúscula, minúscula, número y símbolo.
+- Cooldown de 60 segundos para emails de autenticación.
+- Expiración de OTP/enlaces de 3600 segundos.
+- Signup por email habilitado.
+- Signup anónimo deshabilitado.
+- Redirect URLs para confirmación y recuperación.
 
-1. Activá **Confirm email**.
-2. Definí una contraseña mínima de 8 caracteres y exigí mayúscula, minúscula, número y símbolo.
-3. Usá una expiración de enlace/OTP de 3600 segundos o menos.
-4. Conservá el cooldown de 60 segundos para signup y recovery.
-5. Agregá estas Redirect URLs en **URL Configuration**:
+Redirect URLs declaradas:
 
 ```text
 ibanktp://confirm
@@ -50,39 +130,161 @@ http://localhost:8081/confirm
 http://localhost:8081/reset-password
 ```
 
-Durante el desarrollo con Expo Go, `Linking.createURL` puede generar una URL `exp://`. Revisá el valor mostrado por tu sesión de Expo y agregalo temporalmente a la allowlist. Para validar el scheme real de punta a punta, usá un development build.
+El scheme de la aplicación está definido en `app.json` como:
 
-Supabase incluye un proveedor de email con límites bajos para pruebas. Configurá SMTP propio antes de usar la app en producción. La protección de contraseñas filtradas requiere un plan compatible.
+```text
+ibanktp
+```
 
-## Flujo y seguridad
+Durante desarrollo con Expo Go, `Linking.createURL()` puede generar una URL `exp://`. Esa URL debe agregarse temporalmente a la allowlist del proyecto Supabase si se prueba el flujo desde Expo Go. Para validar el scheme `ibanktp://` de punta a punta se recomienda usar un development build.
 
-- La sesión se guarda en AsyncStorage, siguiendo el quickstart de Supabase para React Native.
-- El refresh token se renueva solo mientras la app está activa.
-- Las rutas de autenticación y Home se protegen según la sesión, sin mostrar brevemente una pantalla incorrecta.
-- Los errores de Supabase se traducen en un único módulo y los mensajes evitan enumerar usuarios.
-- Signup, reenvío y recovery aplican un cooldown visual de 60 segundos.
-- El formulario de contraseña nueva solo se habilita con una sesión de recuperación válida.
-- Después de actualizar la contraseña se cierra la sesión temporal y se vuelve al login.
-- El código no registra contraseñas ni tokens.
+> Importante: `supabase/config.toml` documenta la configuración esperada/reproducible. Antes de entregar conviene verificar que el proyecto remoto de Supabase tenga efectivamente los mismos valores.
 
-## Verificación
+La configuración completa está explicada en [SUPABASE_CONFIG.md](./SUPABASE_CONFIG.md).
+
+## Flujo implementado
+
+### 1. Inicio de sesión
+
+El login utiliza `supabase.auth.signInWithPassword()`.
+
+El botón solo se habilita cuando el email es válido y la contraseña no está vacía. Durante la request se bloquean los campos y se muestra el estado de carga.
+
+Los errores se traducen mediante un módulo centralizado. Las credenciales inválidas muestran un mensaje genérico y un email no confirmado redirige a la pantalla de confirmación pendiente.
+
+### 2. Registro
+
+El registro utiliza `supabase.auth.signUp()` y guarda el nombre ingresado en `user_metadata.full_name`.
+
+La contraseña debe cumplir:
+
+- 8 caracteres como mínimo.
+- Una letra mayúscula.
+- Una letra minúscula.
+- Un número.
+- Un símbolo.
+
+Además, la confirmación debe coincidir y el checkbox de términos es obligatorio.
+
+El formulario muestra un checklist de contraseña en tiempo real.
+
+### 3. Confirmación pendiente
+
+Luego del registro se muestra el email al que se envió la confirmación.
+
+El usuario puede reenviar el mensaje mediante `supabase.auth.resend()` y se aplica un cooldown visual de 60 segundos.
+
+### 4. Recuperación de contraseña
+
+Se utiliza `supabase.auth.resetPasswordForEmail()` con un deep link hacia `reset-password`.
+
+Después del envío se muestra el mismo mensaje neutro independientemente de si el email existe o no:
+
+> Si el email existe en nuestro sistema, vas a recibir instrucciones.
+
+### 5. Nueva contraseña
+
+La pantalla de nueva contraseña solo se habilita cuando existe una sesión de recuperación válida.
+
+La aplicación procesa enlaces entrantes y el evento `PASSWORD_RECOVERY`. Al guardar la nueva contraseña se utiliza `supabase.auth.updateUser()`.
+
+Después de actualizarla, la sesión temporal de recuperación se cierra y el usuario vuelve al login con un mensaje de éxito.
+
+## Sesión y rutas protegidas
+
+`AuthProvider` centraliza:
+
+- Obtención de la sesión inicial.
+- Persistencia de sesión.
+- Escucha de cambios de autenticación.
+- Deep links.
+- Recuperación de contraseña.
+- Auto-refresh según foreground/background.
+
+Las rutas se separan en dos grupos:
+
+```text
+src/app/(auth)   pantallas públicas de autenticación
+src/app/(app)    pantallas que requieren una sesión válida
+```
+
+Mientras se resuelve la sesión inicial se muestra un loader, evitando un parpadeo incorrecto del login.
+
+## Manejo de errores
+
+Los errores de Supabase se traducen en `src/lib/auth-errors.ts` para evitar duplicar lógica entre pantallas.
+
+Se contemplan, entre otros:
+
+- Credenciales inválidas.
+- Email no confirmado.
+- Rate limit.
+- Contraseña débil.
+- Usuario existente.
+- Errores de red.
+- Link vencido o inválido.
+
+## Seguridad
+
+- No se registran contraseñas ni tokens en consola.
+- `.env` no se versiona.
+- Solo se utiliza la clave pública `anon/publishable` en el cliente.
+- La `service_role` no se incluye en la aplicación.
+- Los formularios no permiten doble envío durante una request.
+- Los mensajes sensibles evitan revelar si una cuenta existe.
+
+## Verificación técnica
+
+Para comprobar TypeScript:
 
 ```bash
 npm run typecheck
+```
+
+Para verificar que Expo pueda generar la versión web:
+
+```bash
 npx expo export --platform web
 ```
 
-El flujo debe probarse en Android o iOS con un proyecto Supabase real. iOS no fue probado en este entorno Windows.
+## Plataforma probada
 
-## Estructura
+Completar antes de la entrega con la prueba real realizada:
+
+```text
+Plataforma probada: ____________________
+Dispositivo / emulador: _______________
+Resultado: _____________________________
+```
+
+La consigna exige probar el flujo al menos en Android o iOS y documentar si no se probó en la otra plataforma.
+
+## Estructura del proyecto
 
 ```text
 src/app/          rutas y pantallas de Expo Router
 src/components/   componentes reutilizables de formularios
-src/hooks/        cooldown reutilizable
-src/lib/          Supabase, validaciones y mapeo de errores
+src/hooks/        hooks reutilizables, incluido cooldown
+src/lib/          cliente Supabase, validaciones y errores
 src/providers/    sesión, ciclo de vida y deep links
 src/theme/        tokens visuales
+supabase/         configuración reproducible de Supabase
 ```
 
-Consultá [DECISIONES.md](./DECISIONES.md) para las adaptaciones de diseño y alcance.
+## Documentación de entrega
+
+- [DECISIONES.md](./DECISIONES.md): decisiones de diseño, arquitectura, adaptaciones y alcance.
+- [SUPABASE_CONFIG.md](./SUPABASE_CONFIG.md): configuración de Authentication utilizada.
+- [EVIDENCIAS.md](./EVIDENCIAS.md): guía de capturas y pruebas a adjuntar para la entrega.
+- [ENTREGA.md](./ENTREGA.md): checklist final antes de presentar.
+
+## Alcance no implementado
+
+De acuerdo con la consigna, quedaron fuera del alcance obligatorio:
+
+- Login social.
+- Segundo factor mediante OTP.
+- PIN local.
+- Biometría.
+- CAPTCHA.
+- Tabla pública `profiles`.
