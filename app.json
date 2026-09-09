@@ -1,11 +1,19 @@
 {
   "expo": {
-    "name": "tp3mobile",
-    "slug": "tp3mobile",
+    "name": "iBank",
+    "slug": "ibank-tp",
     "version": "1.0.0",
     "orientation": "portrait",
+    "scheme": "ibanktp",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
     "ios": {
       "supportsTablet": true
     },
